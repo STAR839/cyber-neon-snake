@@ -1,0 +1,53 @@
+# 🚀 自动部署赛博霓虹贪吃蛇游戏到GitHub Pages
+name: Deploy Cyber Snake Game to GitHub Pages
+
+# 触发条件：推送到main分支或创建Pull Request时
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  
+  # 允许手动触发工作流
+  workflow_dispatch:
+
+# 设置GITHUB_TOKEN的权限以允许部署到GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 只允许一个并发部署，跳过正在运行和最新排队之间的运行
+# 但是，不要取消正在进行的运行，因为我们希望让这些生产部署完成
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  # 构建任务
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 检出代码
+        uses: actions/checkout@v4
+        
+      - name: 🔧 设置GitHub Pages
+        uses: actions/configure-pages@v4
+        
+      - name: 📦 上传构建产物
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # 上传整个仓库
+          path: '.'
+
+  # 部署任务
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: 🚀 部署到GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

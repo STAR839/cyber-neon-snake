@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>赛博霓虹贪吃蛇</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 min-h-screen overflow-hidden">
+    <!-- 背景动效层 -->
+    <div id="background-effects" class="fixed inset-0 pointer-events-none">
+        <div class="neon-grid"></div>
+        <div class="floating-particles"></div>
+    </div>
+
+    <!-- 主界面 -->
+    <div id="main-menu" class="screen active">
+        <div class="container mx-auto px-4 h-screen flex flex-col justify-center items-center">
+            <!-- LOGO -->
+            <div class="text-center mb-12">
+                <h1 class="neon-text text-6xl md:text-8xl font-pixel mb-4">
+                    CYBER<span class="text-pink-400">SNAKE</span>
+                </h1>
+                <div class="snake-logo-icon"></div>
+            </div>
+
+            <!-- 最高记录 -->
+            <div class="mb-8">
+                <p class="text-cyan-400 text-xl font-pixel">最高记录: <span id="high-score">0</span> 分</p>
+            </div>
+
+            <!-- 主要按钮 -->
+            <div class="flex flex-col space-y-4 mb-8">
+                <button id="start-game" class="neon-button primary">开始游戏</button>
+                <button id="mode-select" class="neon-button secondary">模式选择</button>
+                <button id="skin-store" class="neon-button secondary">皮肤仓库</button>
+            </div>
+
+            <!-- 设置按钮 -->
+            <div class="mb-8">
+                <button id="settings" class="settings-icon">⚙️</button>
+            </div>
+
+            <!-- 底部信息 -->
+            <div class="text-center text-sm text-gray-400">
+                <p>© 2024 Cyber Snake | <button id="controls-guide" class="text-cyan-400 hover:text-pink-400">操作指南</button></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 游戏界面 -->
+    <div id="game-screen" class="screen">
+        <!-- 顶部状态栏 -->
+        <div class="game-header">
+            <div class="score-display">
+                <span id="current-score" class="score-number">0</span>
+            </div>
+            <button id="pause-btn" class="pause-button">⏸️</button>
+        </div>
+
+        <!-- 游戏画布容器 -->
+        <div class="game-container">
+            <canvas id="game-canvas" class="game-canvas"></canvas>
+            <!-- 控制提示 -->
+            <div class="control-hint">
+                <span class="hint-text">使用 ↑↓←→ 方向键控制蛇移动</span>
+            </div>
+        </div>
+
+        <!-- 移动端虚拟按键 -->
+        <div id="virtual-controls" class="virtual-controls">
+            <div class="control-pad">
+                <button class="control-btn up" data-direction="up">↑</button>
+                <div class="control-row">
+                    <button class="control-btn left" data-direction="left">←</button>
+                    <button class="control-btn right" data-direction="right">→</button>
+                </div>
+                <button class="control-btn down" data-direction="down">↓</button>
+            </div>
+        </div>
+
+        <!-- 提示按钮 -->
+        <button id="hint-btn" class="hint-button">💡</button>
+    </div>
+
+    <!-- 模式选择界面 -->
+    <div id="mode-screen" class="screen">
+        <div class="container mx-auto px-4 h-screen flex flex-col justify-center items-center">
+            <h2 class="neon-text text-4xl font-pixel mb-12">选择模式</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                <!-- 经典模式 -->
+                <div class="mode-card" data-mode="classic">
+                    <div class="mode-icon">🐍</div>
+                    <h3 class="mode-title">经典模式</h3>
+                    <p class="mode-desc">无限时长，蛇身随得分加速</p>
+                </div>
+
+                <!-- 限时挑战 -->
+                <div class="mode-card" data-mode="timed">
+                    <div class="mode-icon">⏰</div>
+                    <h3 class="mode-title">限时挑战</h3>
+                    <p class="mode-desc">60秒倒计时，食物得分翻倍</p>
+                </div>
+
+                <!-- 障碍模式 -->
+                <div class="mode-card" data-mode="obstacle">
+                    <div class="mode-icon">🚧</div>
+                    <h3 class="mode-title">障碍模式</h3>
+                    <p class="mode-desc">随机障碍物，需绕路收集食物</p>
+                </div>
+            </div>
+
+            <button id="back-to-main" class="neon-button secondary">返回主界面</button>
+        </div>
+    </div>
+
+    <!-- 结算界面 -->
+    <div id="game-over-screen" class="screen">
+        <div class="container mx-auto px-4 h-screen flex flex-col justify-center items-center">
+            <div class="game-over-content">
+                <h2 class="neon-text text-5xl font-pixel mb-8">游戏结束</h2>
+                
+                <div class="score-summary mb-8">
+                    <div class="final-score">
+                        <span class="score-label">本次得分</span>
+                        <span id="final-score" class="score-value">0</span>
+                    </div>
+                    <div id="score-comparison" class="score-comparison"></div>
+                </div>
+
+                <div class="game-stats mb-8">
+                    <div class="stat-item">
+                        <span class="stat-label">存活时间</span>
+                        <span id="survival-time" class="stat-value">0s</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">最大长度</span>
+                        <span id="max-length" class="stat-value">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">特殊食物</span>
+                        <span id="special-food" class="stat-value">0</span>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button id="play-again" class="neon-button primary">再玩一次</button>
+                    <button id="share-score" class="neon-button secondary">分享战绩</button>
+                    <button id="back-to-menu" class="neon-button secondary">返回主界面</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 暂停菜单 -->
+    <div id="pause-menu" class="modal">
+        <div class="modal-content">
+            <h3 class="modal-title">游戏暂停</h3>
+            <div class="modal-buttons">
+                <button id="resume-game" class="neon-button primary">继续游戏</button>
+                <button id="restart-game" class="neon-button secondary">重新开始</button>
+                <button id="quit-game" class="neon-button secondary">返回主界面</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 设置菜单 -->
+    <div id="settings-menu" class="modal">
+        <div class="modal-content">
+            <h3 class="modal-title">游戏设置</h3>
+            <div class="settings-options">
+                <div class="setting-item">
+                    <label>背景音乐</label>
+                    <input type="checkbox" id="bgm-toggle" checked>
+                </div>
+                <div class="setting-item">
+                    <label>音效</label>
+                    <input type="checkbox" id="sfx-toggle" checked>
+                </div>
+                <div class="setting-item">
+                    <label>夜间模式</label>
+                    <input type="checkbox" id="night-mode-toggle">
+                </div>
+            </div>
+            <button id="close-settings" class="neon-button primary">确定</button>
+        </div>
+    </div>
+
+    <!-- 操作指南 -->
+    <div id="controls-modal" class="modal">
+        <div class="modal-content">
+            <h3 class="modal-title">操作指南</h3>
+            <div class="controls-guide">
+                <div class="control-section">
+                    <h4>PC端键盘控制</h4>
+                    <p><strong>方向键：</strong>↑ ↓ ← → 控制蛇的移动方向</p>
+                    <p><strong>空格键：</strong>暂停/恢复游戏</p>
+                    <p><strong>ESC键：</strong>关闭弹窗或暂停游戏</p>
+                </div>
+                <div class="control-section">
+                    <h4>移动端触摸控制</h4>
+                    <p><strong>滑动屏幕：</strong>在游戏区域滑动改变方向</p>
+                    <p><strong>虚拟按键：</strong>点击屏幕下方的方向按钮</p>
+                </div>
+                <div class="control-section">
+                    <h4>游戏提示</h4>
+                    <p>• 开始游戏后才能使用键盘控制</p>
+                    <p>• 蛇不能立即反向移动</p>
+                    <p>• 收集食物可以增加分数和长度</p>
+                </div>
+            </div>
+            <button id="close-controls" class="neon-button primary">知道了</button>
+        </div>
+    </div>
+
+    <!-- 加载脚本 -->
+    <script src="js/utils.js"></script>
+    <script src="js/audio.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/game.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
